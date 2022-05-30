@@ -4,9 +4,14 @@ import "dotenv/config";
 import { connectToBallot, connectToBlockchain } from "./utils";
 
 async function main() {
-
+    let ballotAddress;
     const signer = await connectToBlockchain();
-    const ballotAddress = process.argv[2];
+    if (process.argv.length < 2) {
+        ballotAddress = "someaddress";
+    }
+    else {
+        ballotAddress = process.argv[2];
+    }
     const ballotContract = connectToBallot(ballotAddress, signer)
     let index = 0;
     while (index !== -1) {
