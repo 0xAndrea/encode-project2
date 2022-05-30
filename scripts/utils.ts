@@ -12,7 +12,7 @@ export async function connectToBlockchain() {
             ? ethers.Wallet.fromMnemonic(process.env.MNEMONIC)
             : new ethers.Wallet(process.env.PRIVATE_KEY ?? EXPOSED_KEY);
     console.log(`Using address ${wallet.address}`);
-    const provider = ethers.providers.getDefaultProvider("ropsten", { etherscan: process.env.ETHERSCAN_API_KEY });
+    const provider = getProvider();
     const signer = await wallet.connect(provider);
     const balanceBN = await signer.getBalance();
     const balance = Number(ethers.utils.formatEther(balanceBN));
@@ -28,6 +28,14 @@ export function convertStringArrayToBytes32(array: string[]) {
         bytes32Array.push(ethers.utils.formatBytes32String(array[index]));
     }
     return bytes32Array;
+}
+export function getProvider() {
+    const provider = ethers.providers.getDefaultProvider("ropsten", {
+        etherscan: process.env.ETHERSCAN_API_KEY,
+        alchemy: process.env.ALCHEMY_API_KEY
+    });
+
+    return provider;
 }
 export function connectToBallot(ballotAddress: string, signer: Signer) {
     console.log(

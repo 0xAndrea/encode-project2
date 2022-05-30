@@ -89,71 +89,70 @@ describe("Ballot", function () {
   });
 
   for (let batch = 0; batch < ACCOUNTS_FOR_TESTING; batch++) {
-    describe(`when tokens are minted for ${
-      batch + 1
-    } accounts of ${ACCOUNTS_FOR_TESTING}`, async () => {
-      beforeEach(async () => {
-        for (let index = 0; index <= batch; index++) {
-          const mintTx = await tokenContract.mint(
-            accounts[index + 1].address,
-            BASE_VOTE_POWER
-          );
-          await mintTx.wait();
-          const delegateTx = await tokenContract
-            .connect(accounts[index + 1])
-            .delegate(accounts[index + 1].address);
-          await delegateTx.wait();
-        }
-      });
-
-      describe("when a ballot is created", async () => {
+    describe(`when tokens are minted for ${batch + 1
+      } accounts of ${ACCOUNTS_FOR_TESTING}`, async () => {
         beforeEach(async () => {
-          ballotContract = await ballotFactory.deploy(
-            convertStringArrayToBytes32(PROPOSALS),
-            tokenContract.address
-          );
-          await ballotContract.deployed();
+          for (let index = 0; index <= batch; index++) {
+            const mintTx = await tokenContract.mint(
+              accounts[index + 1].address,
+              BASE_VOTE_POWER
+            );
+            await mintTx.wait();
+            const delegateTx = await tokenContract
+              .connect(accounts[index + 1])
+              .delegate(accounts[index + 1].address);
+            await delegateTx.wait();
+          }
         });
 
-        for (let index = 0; index < ACCOUNTS_FOR_TESTING; index++) {
-          describe(`when the account ${index + 1} votes`, async () => {
-            const expectedVotes = [0, 0, 0];
-            if (index <= batch) {
-              beforeEach(async () => {
-                const voteTx = await ballotContract
-                  .connect(accounts[index + 1])
-                  .vote(PROPOSAL_CHOSEN[index], USED_VOTE_POWER);
-                await voteTx.wait();
-                expectedVotes[PROPOSAL_CHOSEN[index]] += USED_VOTE_POWER;
-              });
-
-              it("updates the votes for that proposal", async () => {
-                const votedProposal = await ballotContract.proposals(
-                  PROPOSAL_CHOSEN[index]
-                );
-                expect(votedProposal.voteCount).to.eq(
-                  expectedVotes[PROPOSAL_CHOSEN[index]]
-                );
-              });
-
-              it("updates the spent votes for that account", async () => {
-                const spentVotes = await ballotContract.spentVotePower(
-                  accounts[index + 1].address
-                );
-                expect(spentVotes).to.eq(USED_VOTE_POWER);
-              });
-            } else {
-              it("fails", async () => {
-                await expect(
-                  ballotContract
-                    .connect(accounts[index + 1])
-                    .vote(PROPOSAL_CHOSEN[index], USED_VOTE_POWER)
-                ).to.be.revertedWith("Has not enough voting power");
-              });
-            }
+        describe("when a ballot is created", async () => {
+          beforeEach(async () => {
+            ballotContract = await ballotFactory.deploy(
+              convertStringArrayToBytes32(PROPOSALS),
+              tokenContract.address
+            );
+            await ballotContract.deployed();
           });
-        }
+
+          for (let index = 0; index < ACCOUNTS_FOR_TESTING; index++) {
+            describe(`when the account ${index + 1} votes`, async () => {
+              const expectedVotes = [0, 0, 0];
+              if (index <= batch) {
+                beforeEach(async () => {
+                  const voteTx = await ballotContract
+                    .connect(accounts[index + 1])
+                    .vote(PROPOSAL_CHOSEN[index], USED_VOTE_POWER);
+                  await voteTx.wait();
+                  expectedVotes[PROPOSAL_CHOSEN[index]] += USED_VOTE_POWER;
+                });
+
+                it("updates the votes for that proposal", async () => {
+                  const votedProposal = await ballotContract.proposals(
+                    PROPOSAL_CHOSEN[index]
+                  );
+                  expect(votedProposal.voteCount).to.eq(
+                    expectedVotes[PROPOSAL_CHOSEN[index]]
+                  );
+                });
+
+                it("updates the spent votes for that account", async () => {
+                  const spentVotes = await ballotContract.spentVotePower(
+                    accounts[index + 1].address
+                  );
+                  expect(spentVotes).to.eq(USED_VOTE_POWER);
+                });
+              } else {
+                it("fails", async () => {
+                  await expect(
+                    ballotContract
+                      .connect(accounts[index + 1])
+                      .vote(PROPOSAL_CHOSEN[index], USED_VOTE_POWER)
+                  ).to.be.revertedWith("Has not enough voting power");
+                });
+              }
+            });
+          }
+        });
       });
-    });
   }
 });
